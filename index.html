@@ -1,1 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Am I in Ward 1? — Jeff Donkersgoed</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #045F5F;
+    --orange: #E9AB17;
+    --pink: #C21E56;
+    --purple: #483D8B;
+    --dark: #111;
+    --mid: #555;
+    --cream: #FAFAF7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Barlow', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+  }
+  .card {
+    background: white;
+    border-radius: 20px;
+    padding: 3rem 2.5rem;
+    max-width: 560px;
+    width: 100%;
+    box-shadow: 0 8px 48px rgba(4,95,95,.12);
+    text-align: center;
+  }
+  .badge {
+    display: inline-block;
+    background: var(--teal);
+    color: white;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: .8rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    padding: .4rem 1rem;
+    border-radius: 100px;
+    margin-bottom: 1.5rem;
+  }
+  h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 3.2rem;
+    color: var(--teal);
+    text-transform: uppercase;
+    line-height: 1;
+    margin-bottom: .75rem;
+    letter-spacing: .02em;
+  }
+  h1 span { color: var(--orange); }
+  .subtitle {
+    color: var(--mid);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+  .input-row {
+    display: flex;
+    gap: .75rem;
+    margin-bottom: 1rem;
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: .9rem 1.25rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--dark);
+    outline: none;
+    transition: border-color .2s;
+  }
+  input[type="text"]:focus { border-color: var(--teal); }
+  input[type="text"]::placeholder { text-transform: none; font-weight: 400; color: #bbb; letter-spacing: 0; }
+  button {
+    background: var(--teal);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: .9rem 1.75rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .2s, transform .15s;
+  }
+  button:hover { background: #067a7a; transform: translateY(-1px); }
 
+  .result { margin-top: 1.5rem; border-radius: 14px; padding: 1.75rem; display: none; }
+  .result.show { display: block; }
+
+  .result.in-ward {
+    background: #f0fafa;
+    border: 2px solid var(--teal);
+  }
+  .result.not-in-ward {
+    background: #fff5f8;
+    border: 2px solid var(--pink);
+  }
+  .result.not-found {
+    background: #fdf8ee;
+    border: 2px solid var(--orange);
+  }
+
+  .result-icon { font-size: 2.5rem; margin-bottom: .75rem; display: block; }
+
+  .result h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.6rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: .5rem;
+  }
+  .in-ward h2 { color: var(--teal); }
+  .not-in-ward h2 { color: var(--pink); }
+  .not-found h2 { color: var(--orange); }
+
+  .result p { font-size: .95rem; color: var(--mid); line-height: 1.6; }
+  .result p strong { color: var(--dark); }
+
+  .postal-display {
+    display: inline-block;
+    background: var(--teal);
+    color: white;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1.2rem;
+    letter-spacing: .1em;
+    padding: .3rem .9rem;
+    border-radius: 6px;
+    margin-bottom: .75rem;
+  }
+  .not-in-ward .postal-display { background: var(--pink); }
+  .not-found .postal-display { background: var(--orange); color: var(--dark); }
+
+  .cta-link {
+    display: inline-block;
+    margin-top: 1.25rem;
+    background: var(--teal);
+    color: white;
+    padding: .65rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: .875rem;
+    text-decoration: none;
+    transition: background .2s;
+  }
+  .cta-link:hover { background: #067a7a; }
+  .cta-link.pink { background: var(--pink); }
+  .cta-link.pink:hover { background: #a0183f; }
+
+  .sms-box {
+    margin-top: 1.25rem;
+    background: #f0fafa;
+    border: 2px solid var(--teal);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    text-align: left;
+  }
+  .sms-intro {
+    font-size: .95rem;
+    line-height: 1.65;
+    color: var(--dark);
+    margin-bottom: 1rem;
+  }
+  .sms-intro strong { color: var(--teal); }
+  .sms-fields { display: flex; flex-direction: column; gap: .75rem; }
+  .sms-fields input[type="tel"] {
+    width: 100%;
+    padding: .8rem 1rem;
+    border: 2px solid #cde8e8;
+    border-radius: 8px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 1rem;
+    color: var(--dark);
+    outline: none;
+    transition: border-color .2s;
+    background: white;
+  }
+  .sms-fields input[type="tel"]:focus { border-color: var(--teal); }
+  .sms-btn {
+    width: 100%;
+    background: var(--teal);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: .85rem 1.5rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: 1rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .sms-btn:hover { background: #067a7a; }
+  .sms-btn:disabled { background: #aaa; cursor: not-allowed; }
+  .sms-success {
+    margin-top: .75rem;
+    background: var(--teal);
+    color: white;
+    border-radius: 8px;
+    padding: .75rem 1rem;
+    font-size: .9rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  .sms-error {
+    margin-top: .75rem;
+    background: #fff0f3;
+    color: var(--pink);
+    border-radius: 8px;
+    padding: .75rem 1rem;
+    font-size: .875rem;
+    font-weight: 600;
+    text-align: center;
+  }
+  .sms-fine {
+    margin-top: .75rem;
+    font-size: .75rem;
+    color: #888;
+    line-height: 1.5;
+  }
+  .share-box {
+    margin-top: 1.25rem;
+    background: #f8f8f8;
+    border: 2px dashed #ddd;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    text-align: left;
+    position: relative;
+  }
+  .share-box-label {
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mid);
+    margin-bottom: .5rem;
+    display: block;
+  }
+  .share-text {
+    font-size: .9rem;
+    line-height: 1.6;
+    color: var(--dark);
+    font-family: 'Barlow', sans-serif;
+    background: none;
+    border: none;
+    width: 100%;
+    resize: none;
+    outline: none;
+    cursor: text;
+  }
+  .copy-btn {
+    width: 100%;
+    margin-top: .75rem;
+    background: var(--purple);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: .7rem 1.5rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: .95rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+  }
+  .copy-btn:hover { background: #3a3070; }
+  .copy-btn.copied { background: var(--teal); }
+  .share-divider {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin: 1rem 0 .75rem;
+    color: #bbb;
+    font-size: .8rem;
+  }
+  .share-divider::before, .share-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #eee;
+  }
+  .native-share-btn {
+    width: 100%;
+    background: white;
+    color: var(--teal);
+    border: 2px solid var(--teal);
+    border-radius: 8px;
+    padding: .65rem 1.5rem;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 900;
+    font-size: .95rem;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all .2s;
+    display: none;
+  }
+  .native-share-btn:hover { background: var(--teal); color: white; }
+
+  .footer-note {
+    margin-top: 2rem;
+    font-size: .8rem;
+    color: #aaa;
+    line-height: 1.5;
+  }
+  .footer-note a { color: var(--teal); text-decoration: none; }
+
+  @media (max-width: 480px) {
+    .card { padding: 2rem 1.5rem; }
+    .input-row { flex-direction: column; }
+    h1 { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="badge">Ward 1 · Cambridge, ON</div>
+  <h1>Am I in <span>Ward 1?</span></h1>
+  <p class="subtitle">Enter your postal code below to find out if you're in Jeff Donkersgoed's Ward 1 — and eligible to vote for him in the municipal election.</p>
+
+  <div class="input-row">
+    <input type="text" id="postalInput" placeholder="e.g. N3C 1A3" maxlength="7" autocomplete="off">
+    <button onclick="lookup()">Check</button>
+  </div>
+
+  <div class="result" id="result"></div>
+
+  <p class="footer-note">
+    Accuracy is based on source files.<br>
+    Source data: City of Cambridge Geohub 'Wards'; Datahub 'Postal Codes Dataset for Canada, CA'.<br>
+    Questions? Contact Jeff at <a href="mailto:jeffdonkersgoedward1@gmail.com">jeffdonkersgoedward1@gmail.com</a> Visit <a href="https://www.jeffward1.ca">www.jeffward1.ca</a>.
+  </p>
+</div>
+
+<script>
+const ward1PostalCodes = {
+  "N1R6J8": "Cambridge, ON",
+  "N1R7K7": "Cambridge, ON",
+  "N1R8N7": "Cambridge, ON",
+  "N1R8P4": "Cambridge, ON",
+  "N1R8P7": "Cambridge, ON",
+  "N1S2K5": "Cambridge, ON",
+  "N1T2H1": "Cambridge, ON",
+  "N3C0A2": "Cambridge, ON",
+  "N3C0A4": "Cambridge, ON",
+  "N3C0G6": "Cambridge, ON",
+  "N3C0G7": "Cambridge, ON",
+  "N3C0G8": "Cambridge, ON",
+  "N3C0H2": "Cambridge, ON",
+  "N3C0H3": "Cambridge, ON",
+  "N3C1A3": "Cambridge, ON",
+  "N3C1A4": "Cambridge, ON",
+  "N3C1A5": "Cambridge, ON",
+  "N3C1A6": "Cambridge, ON",
+  "N3C1A7": "Cambridge, ON",
+  "N3C1A8": "Cambridge, ON",
+  "N3C1A9": "Cambridge, ON",
+  "N3C1B1": "Cambridge, ON",
+  "N3C1B2": "Cambridge, ON",
+  "N3C1B3": "Cambridge, ON",
+  "N3C1B4": "Cambridge, ON",
+  "N3C1B5": "Cambridge, ON",
+  "N3C1B6": "Cambridge, ON",
+  "N3C1B7": "Cambridge, ON",
+  "N3C1B8": "Cambridge, ON",
+  "N3C1B9": "Cambridge, ON",
+  "N3C1C1": "Cambridge, ON",
+  "N3C1C2": "Cambridge, ON",
+  "N3C1C3": "Cambridge, ON",
+  "N3C1C4": "Cambridge, ON",
+  "N3C1C5": "Cambridge, ON",
+  "N3C1C7": "Cambridge, ON",
+  "N3C1C8": "Cambridge, ON",
+  "N3C1C9": "Cambridge, ON",
+  "N3C1E1": "Cambridge, ON",
+  "N3C1E2": "Cambridge, ON",
+  "N3C1E3": "Cambridge, ON",
+  "N3C1E4": "Cambridge, ON",
+  "N3C1E5": "Cambridge, ON",
+  "N3C1E6": "Cambridge, ON",
+  "N3C1E7": "Cambridge, ON",
+  "N3C1E8": "Cambridge, ON",
+  "N3C1E9": "Cambridge, ON",
+  "N3C1H1": "Cambridge, ON",
+  "N3C2W4": "Cambridge, ON",
+  "N3C2W6": "Cambridge, ON",
+  "N3C2W7": "Cambridge, ON",
+  "N3C2W8": "Cambridge, ON",
+  "N3C2W9": "Cambridge, ON",
+  "N3C2X1": "Cambridge, ON",
+  "N3C2X2": "Cambridge, ON",
+  "N3C2X3": "Cambridge, ON",
+  "N3C2X4": "Cambridge, ON",
+  "N3C2X5": "Cambridge, ON",
+  "N3C2X6": "Cambridge, ON",
+  "N3C2X7": "Cambridge, ON",
+  "N3C2X8": "Cambridge, ON",
+  "N3C2X9": "Cambridge, ON",
+  "N3C2Y2": "Cambridge, ON",
+  "N3C2Y3": "Cambridge, ON",
+  "N3C2Y4": "Cambridge, ON",
+  "N3C2Y5": "Cambridge, ON",
+  "N3C2Y9": "Cambridge, ON",
+  "N3C2Z1": "Cambridge, ON",
+  "N3C2Z2": "Cambridge, ON",
+  "N3C2Z3": "Cambridge, ON",
+  "N3C3A9": "Cambridge, ON",
+  "N3C3B1": "Cambridge, ON",
+  "N3C3B2": "Cambridge, ON",
+  "N3C3B3": "Cambridge, ON",
+  "N3C3B4": "Cambridge, ON",
+  "N3C3B5": "Cambridge, ON",
+  "N3C3B9": "Cambridge, ON",
+  "N3C3H4": "Cambridge, ON",
+  "N3C3J9": "Cambridge, ON",
+  "N3C3K6": "Cambridge, ON",
+  "N3C3K7": "Cambridge, ON",
+  "N3C3K8": "Cambridge, ON",
+  "N3C3L7": "Cambridge, ON",
+  "N3C3L9": "Cambridge, ON",
+  "N3C3N1": "Cambridge, ON",
+  "N3C3P2": "Cambridge, ON",
+  "N3C3W2": "Cambridge, ON",
+  "N3C3W3": "Cambridge, ON",
+  "N3C3W4": "Cambridge, ON",
+  "N3C3W5": "Cambridge, ON",
+  "N3C3W6": "Cambridge, ON",
+  "N3C3W7": "Cambridge, ON",
+  "N3C3W8": "Cambridge, ON",
+  "N3C3W9": "Cambridge, ON",
+  "N3C3X2": "Cambridge, ON",
+  "N3C3X3": "Cambridge, ON",
+  "N3C3X7": "Cambridge, ON",
+  "N3C3Z6": "Cambridge, ON",
+  "N3C3Z7": "Cambridge, ON",
+  "N3C3Z8": "Cambridge, ON",
+  "N3C4A1": "Cambridge, ON",
+  "N3C4A2": "Cambridge, ON",
+  "N3C4A3": "Cambridge, ON",
+  "N3C4A4": "Cambridge, ON",
+  "N3C4A5": "Cambridge, ON",
+  "N3C4A6": "Cambridge, ON",
+  "N3C4A7": "Cambridge, ON",
+  "N3C4A8": "Cambridge, ON",
+  "N3C4A9": "Cambridge, ON",
+  "N3C4B2": "Cambridge, ON",
+  "N3C4B8": "Cambridge, ON",
+  "N3C4B9": "Cambridge, ON",
+  "N3C4N5": "Cambridge, ON",
+  "N3C4P7": "Cambridge, ON",
+  "N3E0A1": "Cambridge, ON",
+  "N3E0A2": "Cambridge, ON",
+  "N3E0A3": "Cambridge, ON",
+  "N3E0A4": "Cambridge, ON",
+  "N3E0A5": "Cambridge, ON",
+  "N3E0A6": "Cambridge, ON",
+  "N3E0A7": "Cambridge, ON",
+  "N3E0A8": "Cambridge, ON",
+  "N3E0A9": "Cambridge, ON",
+  "N3E0B1": "Cambridge, ON",
+  "N3E0B2": "Cambridge, ON",
+  "N3E0B3": "Cambridge, ON",
+  "N3E0B4": "Cambridge, ON",
+  "N3E0B5": "Cambridge, ON",
+  "N3E0B6": "Cambridge, ON",
+  "N3E0B7": "Cambridge, ON",
+  "N3E0B8": "Cambridge, ON",
+  "N3E0B9": "Cambridge, ON",
+  "N3E0C1": "Cambridge, ON",
+  "N3E0C3": "Cambridge, ON",
+  "N3E0C4": "Cambridge, ON",
+  "N3E0C5": "Cambridge, ON",
+  "N3E0C6": "Cambridge, ON",
+  "N3E0C7": "Cambridge, ON",
+  "N3E0C8": "Cambridge, ON",
+  "N3E0E1": "Cambridge, ON",
+  "N3E0E2": "Cambridge, ON",
+  "N3E0E3": "Cambridge, ON",
+  "N3E0E4": "Cambridge, ON",
+  "N3E0E5": "Cambridge, ON",
+  "N3E0E6": "Cambridge, ON",
+  "N3E0E7": "Cambridge, ON",
+  "N3E1A1": "Cambridge, ON",
+  "N3E1A2": "Cambridge, ON",
+  "N3E1A3": "Cambridge, ON",
+  "N3E1A4": "Cambridge, ON",
+  "N3E1A5": "Cambridge, ON",
+  "N3E1A6": "Cambridge, ON",
+  "N3E1A7": "Cambridge, ON",
+  "N3E1A8": "Cambridge, ON",
+  "N3E1A9": "Cambridge, ON",
+  "N3E1B1": "Cambridge, ON",
+  "N3E1B3": "Cambridge, ON",
+  "N3E1B4": "Cambridge, ON",
+  "N3E1B5": "Cambridge, ON",
+  "N3E1B6": "Cambridge, ON",
+  "N3E1B7": "Cambridge, ON",
+  "N3E1B8": "Cambridge, ON",
+  "N3H0A1": "Cambridge, ON",
+  "N3H0A2": "Cambridge, ON",
+  "N3H0A3": "Cambridge, ON",
+  "N3H0A4": "Cambridge, ON",
+  "N3H0A7": "Cambridge, ON",
+  "N3H0C1": "Cambridge, ON",
+  "N3H0C2": "Cambridge, ON",
+  "N3H0C3": "Cambridge, ON",
+  "N3H0C4": "Cambridge, ON",
+  "N3H0C5": "Cambridge, ON",
+  "N3H0C6": "Cambridge, ON",
+  "N3H0C7": "Cambridge, ON",
+  "N3H0C8": "Cambridge, ON",
+  "N3H0C9": "Cambridge, ON",
+  "N3H0E2": "Cambridge, ON",
+  "N3H0E3": "Cambridge, ON",
+  "N3H0E4": "Cambridge, ON",
+  "N3H1A1": "Cambridge, ON",
+  "N3H1A2": "Cambridge, ON",
+  "N3H1A3": "Cambridge, ON",
+  "N3H1A4": "Cambridge, ON",
+  "N3H1A5": "Cambridge, ON",
+  "N3H1A6": "Cambridge, ON",
+  "N3H1A7": "Cambridge, ON",
+  "N3H1A8": "Cambridge, ON",
+  "N3H1A9": "Cambridge, ON",
+  "N3H1B1": "Cambridge, ON",
+  "N3H1B2": "Cambridge, ON",
+  "N3H1B3": "Cambridge, ON",
+  "N3H1B4": "Cambridge, ON",
+  "N3H1B5": "Cambridge, ON",
+  "N3H1B6": "Cambridge, ON",
+  "N3H1B8": "Cambridge, ON",
+  "N3H1B9": "Cambridge, ON",
+  "N3H1C2": "Cambridge, ON",
+  "N3H1C3": "Cambridge, ON",
+  "N3H1C4": "Cambridge, ON",
+  "N3H1C5": "Cambridge, ON",
+  "N3H1C6": "Cambridge, ON",
+  "N3H1C7": "Cambridge, ON",
+  "N3H1C9": "Cambridge, ON",
+  "N3H1E1": "Cambridge, ON",
+  "N3H1H1": "Cambridge, ON",
+  "N3H1H2": "Cambridge, ON",
+  "N3H1H3": "Cambridge, ON",
+  "N3H1H4": "Cambridge, ON",
+  "N3H1H5": "Cambridge, ON",
+  "N3H1H6": "Cambridge, ON",
+  "N3H1H7": "Cambridge, ON",
+  "N3H1H8": "Cambridge, ON",
+  "N3H1H9": "Cambridge, ON",
+  "N3H1J2": "Cambridge, ON",
+  "N3H1J3": "Cambridge, ON",
+  "N3H2N2": "Cambridge, ON",
+  "N3H2N3": "Cambridge, ON",
+  "N3H2N4": "Cambridge, ON",
+  "N3H2N6": "Cambridge, ON",
+  "N3H2N7": "Cambridge, ON",
+  "N3H2T7": "Cambridge, ON",
+  "N3H2T8": "Cambridge, ON",
+  "N3H2T9": "Cambridge, ON",
+  "N3H3A1": "Cambridge, ON",
+  "N3H3A2": "Cambridge, ON",
+  "N3H3M4": "Cambridge, ON",
+  "N3H3M5": "Cambridge, ON",
+  "N3H3M6": "Cambridge, ON",
+  "N3H4A5": "Cambridge, ON",
+  "N3H4B1": "Cambridge, ON",
+  "N3H4B2": "Cambridge, ON",
+  "N3H4C3": "Cambridge, ON",
+  "N3H4C4": "Cambridge, ON",
+  "N3H4C5": "Cambridge, ON",
+  "N3H4J3": "Cambridge, ON",
+  "N3H4K5": "Cambridge, ON",
+  "N3H4K8": "Cambridge, ON",
+  "N3H4K9": "Cambridge, ON",
+  "N3H4L1": "Cambridge, ON",
+  "N3H4L2": "Cambridge, ON",
+  "N3H4L3": "Cambridge, ON",
+  "N3H4L4": "Cambridge, ON",
+  "N3H4L6": "Cambridge, ON",
+  "N3H4P3": "Cambridge, ON",
+  "N3H4P4": "Cambridge, ON",
+  "N3H4P5": "Cambridge, ON",
+  "N3H4P6": "Cambridge, ON",
+  "N3H4R6": "Cambridge, ON",
+  "N3H4R7": "Cambridge, ON",
+  "N3H4R8": "Cambridge, ON",
+  "N3H4R9": "Cambridge, ON",
+  "N3H4S1": "Cambridge, ON",
+  "N3H4S5": "Cambridge, ON",
+  "N3H4S6": "Cambridge, ON",
+  "N3H4S7": "Cambridge, ON",
+  "N3H4S8": "Cambridge, ON",
+  "N3H4T3": "Cambridge, ON",
+  "N3H4T7": "Cambridge, ON",
+  "N3H4V4": "Cambridge, ON",
+  "N3H4V9": "Cambridge, ON",
+  "N3H4W1": "Cambridge, ON",
+  "N3H4W2": "Cambridge, ON",
+  "N3H4X3": "Cambridge, ON",
+  "N3H4X4": "Cambridge, ON",
+  "N3H4X5": "Cambridge, ON",
+  "N3H4X6": "Cambridge, ON",
+  "N3H4X7": "Cambridge, ON",
+  "N3H4X8": "Cambridge, ON",
+  "N3H4X9": "Cambridge, ON",
+  "N3H4Y1": "Cambridge, ON",
+  "N3H4Y2": "Cambridge, ON",
+  "N3H4Y3": "Cambridge, ON",
+  "N3H4Y4": "Cambridge, ON",
+  "N3H4Y5": "Cambridge, ON",
+  "N3H4Y6": "Cambridge, ON",
+  "N3H4Y7": "Cambridge, ON",
+  "N3H4Y8": "Cambridge, ON",
+  "N3H4Y9": "Cambridge, ON",
+  "N3H4Z1": "Cambridge, ON",
+  "N3H4Z2": "Cambridge, ON",
+  "N3H4Z3": "Cambridge, ON",
+  "N3H4Z4": "Cambridge, ON",
+  "N3H4Z5": "Cambridge, ON",
+  "N3H4Z9": "Cambridge, ON",
+  "N3H5A1": "Cambridge, ON",
+  "N3H5A9": "Cambridge, ON",
+  "N3H5B6": "Cambridge, ON",
+  "N3H5C1": "Cambridge, ON",
+  "N3H5C2": "Cambridge, ON",
+  "N3H5C3": "Cambridge, ON",
+  "N3H5C4": "Cambridge, ON",
+  "N3H5C6": "Cambridge, ON",
+  "N3H5C7": "Cambridge, ON",
+  "N3H5C9": "Cambridge, ON",
+  "N3H5E4": "Cambridge, ON",
+  "N3H5E7": "Cambridge, ON",
+  "N3H5E8": "Cambridge, ON",
+  "N3H5G2": "Cambridge, ON",
+  "N3H5G3": "Cambridge, ON",
+  "N3H5G4": "Cambridge, ON",
+  "N3H5G5": "Cambridge, ON",
+  "N3H5H3": "Cambridge, ON",
+  "N3H5H7": "Cambridge, ON",
+  "N3H5J1": "Cambridge, ON",
+  "N3H5J2": "Cambridge, ON",
+  "N3H5J3": "Cambridge, ON",
+  "N3H5J4": "Cambridge, ON",
+  "N3H5J5": "Cambridge, ON",
+  "N3H5J6": "Cambridge, ON",
+  "N3H5J7": "Cambridge, ON",
+  "N3H5J8": "Cambridge, ON",
+  "N3H5J9": "Cambridge, ON",
+  "N3H5K1": "Cambridge, ON",
+  "N3H5K2": "Cambridge, ON",
+  "N3H5K4": "Cambridge, ON",
+  "N3H5K5": "Cambridge, ON",
+  "N3H5K6": "Cambridge, ON",
+  "N3H5L2": "Cambridge, ON",
+  "N3H5L3": "Cambridge, ON",
+  "N3H5L4": "Cambridge, ON",
+  "N3H5L5": "Cambridge, ON",
+  "N3H5L8": "Cambridge, ON",
+  "N3H5M1": "Cambridge, ON",
+  "N3H5M2": "Cambridge, ON",
+  "N3H5M4": "Cambridge, ON",
+  "N3H5M5": "Cambridge, ON",
+  "N3H5M6": "Cambridge, ON",
+  "N3H5M7": "Cambridge, ON",
+  "N3H5M8": "Cambridge, ON",
+  "N3H5N1": "Cambridge, ON",
+  "N3H5N3": "Cambridge, ON",
+  "N3H5N4": "Cambridge, ON",
+  "N3H5N7": "Cambridge, ON",
+  "N3H5N9": "Cambridge, ON",
+  "N3H5P2": "Cambridge, ON",
+  "N3H5P3": "Cambridge, ON",
+  "N3H5P5": "Cambridge, ON",
+  "N3H5P7": "Cambridge, ON",
+  "N3H5P8": "Cambridge, ON",
+  "N3H5P9": "Cambridge, ON",
+  "N3H5R1": "Cambridge, ON",
+  "N3H5R2": "Cambridge, ON",
+  "N3H5R5": "Cambridge, ON",
+  "N3H5R6": "Cambridge, ON",
+  "N3H5R7": "Cambridge, ON",
+  "N3H5R8": "Cambridge, ON",
+  "N3H5R9": "Cambridge, ON",
+  "N3H5S2": "Cambridge, ON",
+  "N3H5S3": "Cambridge, ON",
+  "N3H5S4": "Cambridge, ON",
+  "N3H5S5": "Cambridge, ON",
+  "N3H5S6": "Cambridge, ON",
+  "N3H5S7": "Cambridge, ON",
+  "N3H5S8": "Cambridge, ON",
+  "N3H5S9": "Cambridge, ON",
+  "N3H5T2": "Cambridge, ON",
+  "N3H5T3": "Cambridge, ON",
+  "N3H5T6": "Cambridge, ON",
+  "N3H5T7": "Cambridge, ON",
+  "N3H5T8": "Cambridge, ON"
+};
+
+function normalize(code) {
+  return code.replace(/\s+/g, '').toUpperCase();
+}
+
+function format(code) {
+  const c = normalize(code);
+  if (c.length >= 6) return c.slice(0,3) + ' ' + c.slice(3,6);
+  return c;
+}
+
+function lookup() {
+  const input = document.getElementById('postalInput').value.trim();
+  const result = document.getElementById('result');
+  const normalized = normalize(input);
+
+  if (normalized.length < 6) {
+    result.className = 'result show not-found';
+    result.innerHTML = `
+      <span class="result-icon">⚠️</span>
+      <h2>Invalid Postal Code</h2>
+      <p>Please enter a full 6-character postal code, like <strong>N3C 1A3</strong>.</p>
+    `;
+    return;
+  }
+
+  const formatted = format(input);
+
+  if (ward1PostalCodes[normalized]) {
+    result.className = 'result show in-ward';
+    result.innerHTML = `
+      <span class="result-icon">✅</span>
+      <div class="postal-display">${formatted}</div>
+      <h2>Yes! You're in Ward 1</h2>
+      <p>Great news — <strong>${formatted}</strong> is a postal code listed within City of Cambridge Ward 1 where Jeff Donkersgoed is running!</p>
+
+      <div class="sms-box">
+        <p class="sms-intro">Life is busy! Enter your cell number below and we'll send you a helpful reminder when online voting begins <strong>September 26</strong>, when advance polls open, and a final reminder on the last voting day <strong>October 26</strong>.</p>
+        <iframe
+          src="https://www.jeffward1.ca/lookuptool/embed?zip_code=${normalized}"
+          title="Sign up for voting reminders"
+          style="width:100%; border:none; min-height:420px; display:block;"
+          loading="lazy">
+        </iframe>
+      </div>
+
+    `;
+  } else if (normalized.length === 6) {
+    const shareMessage = `Hey! Do you live in Cambridge Ward 1? We need change and Jeff Donkersgoed is running to be a new City Councillor. Check if you're in Ward 1 and learn about him at jeffward1.ca 🗳️`;
+    result.className = 'result show not-in-ward';
+    result.innerHTML = `
+      <span class="result-icon">❌</span>
+      <div class="postal-display">${formatted}</div>
+      <h2>Not in Ward 1</h2>
+      <p><strong>${formatted}</strong> does not appear to be in Cambridge Ward 1. You may be in a different ward or municipality.</p>
+      <p style="margin-top:.75rem;">You can still help — share this 'Am I in Ward 1' search tool with a friend who might live in Ward 1!</p>
+      <div class="share-box">
+        <span class="share-box-label">📋 Copy this message to share:</span>
+        <textarea class="share-text" id="shareText" rows="4" readonly>${shareMessage}</textarea>
+        <button class="copy-btn" id="copyBtn" onclick="copyMessage()">
+          <span id="copyBtnText">Share 'Am I in Ward 1' →</span>
+        </button>
+        <div class="share-divider">or share directly</div>
+        <button class="native-share-btn" id="nativeShareBtn" onclick="nativeShare()">📤 Share via Phone / Apps</button>
+      </div>
+    `;
+    // Show native share button if supported (mobile)
+    if (navigator.share) {
+      document.getElementById('nativeShareBtn').style.display = 'block';
+    }
+  }
+}
+
+// Allow Enter key
+document.getElementById('postalInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') lookup();
+});
+
+function copyMessage() {
+  const text = document.getElementById('shareText').value;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    const btnText = document.getElementById('copyBtnText');
+    btn.classList.add('copied');
+    btnText.textContent = '✅ Copied!';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btnText.textContent = '📋 Copy Message';
+    }, 2500);
+  }).catch(() => {
+    // Fallback for older browsers
+    const textarea = document.getElementById('shareText');
+    textarea.select();
+    document.execCommand('copy');
+    const btnText = document.getElementById('copyBtnText');
+    btnText.textContent = '✅ Copied!';
+    setTimeout(() => { btnText.textContent = '📋 Copy Message'; }, 2500);
+  });
+}
+
+function nativeShare() {
+  if (navigator.share) {
+    navigator.share({
+      title: 'Am I in Ward 1? — Jeff Donkersgoed',
+      text: document.getElementById('shareText').value,
+      url: 'https://www.jeffward1.ca'
+    });
+  }
+}
+
+// Auto-format input as user types
+document.getElementById('postalInput').addEventListener('input', function(e) {
+  let val = normalize(e.target.value);
+  if (val.length > 3) val = val.slice(0,3) + ' ' + val.slice(3,6);
+  e.target.value = val;
+});
+
+// Auto-resize: tell the parent page (Solidarity Tech) how tall this content is
+function sendHeightToParent() {
+  const height = document.body.scrollHeight;
+  window.parent.postMessage({ type: 'solidarity-tech-resize', height: height }, '*');
+}
+window.addEventListener('load', sendHeightToParent);
+window.addEventListener('resize', sendHeightToParent);
+if (window.ResizeObserver) {
+  new ResizeObserver(sendHeightToParent).observe(document.body);
+} else {
+  setInterval(sendHeightToParent, 500);
+}
+</script>
+</body>
+</html>
